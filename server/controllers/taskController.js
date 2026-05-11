@@ -1,7 +1,13 @@
 const supabase = require("../db/supabaseClient");
+const taskService = require("../services/taskService")
 
 const getTasks = async (req, res) => {
-  const { data, error } = await supabase.from("tasks").select("*");
+  const user_id = req.user.id;
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", user_id);
 
   if (error) return res.status(500).json({ error: error.message });
 
@@ -21,13 +27,15 @@ const getTaskById = async (req, res) => {
 }
 
 const createTask = async (req, res) => {
+  const user_id = req.user.id;
+
   const { title } = req.body;
 
   if (!title || title.trim() === "") {
     return res.status(400).json({ message: "Title is required" });
   }
 
-  const result = await taskService.createTask(title);
+  const result = await taskService.createTask(title, user_id);
 
   if (result.error) {
     return handleDbError(result.error, res);
@@ -63,6 +71,28 @@ const updateTask = async (req, res) => {
   res.json(data);
 }
 
+const completeTask = async (req, res) => {
+  const { completed } = req.body;
+
+  if (completed !== undefined && typeof completed !== "boolean") {
+    return res.status(400).json({ message: "Completed must be a boolean" });
+  }
+
+  const updates = {};
+  if (completed !== undefined) updates.completed = completed;
+
+  const {data, error} = await supabase
+    .from("tasks")
+    .update(updates)
+    .eq("id", req.params.id)
+    .select()
+    .single();
+
+  if (error) return res.status(404).json({ message: "Task not found" });
+
+  res.json(data);
+}
+
 const deleteTask = async (req, res) => {
   const { error } = await supabase
   .from("tasks")
@@ -79,5 +109,6 @@ module.exports = {
   getTaskById,
   createTask,
   updateTask,
+  completeTask,
   deleteTask
 };
