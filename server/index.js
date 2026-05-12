@@ -10,7 +10,7 @@ const path = require("path");
 app.use(cors());
 app.use(express.json());
 app.use("/tasks", taskRoutes);
-app.use("/", authRoutes);
+app.use("/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server API is running");
