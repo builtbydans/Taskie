@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -63,7 +65,7 @@ const LoginPage = () => {
   return (
     <div>
       {message && (
-        <p>{message}</p>
+        <Card>{message}</Card>
       )}
       <h1>Login</h1>
 
@@ -91,9 +93,9 @@ const LoginPage = () => {
           />
         </div>
 
-        <button type="submit">
-          {loading ? "Logging in..." : "Login"}
-        </button>
+        <Button type="submit">
+            {loading ? "Logging in..." : "Login"}
+        </Button>
 
       </form>
 
