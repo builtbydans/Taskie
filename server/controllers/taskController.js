@@ -28,7 +28,6 @@ const getTaskById = async (req, res) => {
 
 const createTask = async (req, res) => {
   const user_id = req.user.id;
-
   const { title } = req.body;
 
   if (!title || title.trim() === "") {
@@ -38,7 +37,9 @@ const createTask = async (req, res) => {
   const result = await taskService.createTask(title, user_id);
 
   if (result.error) {
-    return handleDbError(result.error, res);
+    return res.status(500).json({
+      message: result.error.message
+    });
   }
 
   res.status(201).json(result.data);

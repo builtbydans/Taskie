@@ -4,6 +4,7 @@ const express = require("express");
 const app = express();
 const taskRoutes = require("./routes/tasks");
 const authRoutes = require("./routes/auth");
+const calendarRoutes = require("./routes/calendar");
 const cors = require("cors");
 const path = require("path");
 
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/tasks", taskRoutes);
 app.use("/auth", authRoutes);
+app.use("/calendar", calendarRoutes);
 
 app.get("/", (req, res) => {
   res.send("Server API is running");

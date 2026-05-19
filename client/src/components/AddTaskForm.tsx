@@ -31,4 +31,4 @@ const AddTaskForm = ({ handleSubmit, handleChange, title}: AddTaskProps) => {
   )
 }
 
-export default AddTaskForm
+export default AddTaskForm;

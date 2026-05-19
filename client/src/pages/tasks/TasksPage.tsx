@@ -4,6 +4,7 @@ import type { Task } from '../../types/task';
 import AddTaskForm from '../../components/AddTaskForm';
 import { apiFetch } from '../../lib/api';
 import LogoutButton from '../../components/auth/LogoutButton';
+import { CalendarEventCard } from '../../components/calendar/CalendarEventCard';
 
 type Filter =
   | "ALL"
@@ -13,6 +14,7 @@ type Filter =
 
 const TasksPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -35,6 +37,25 @@ const TasksPage = () => {
     }
 
     fetchTasks();
+  }, [])
+
+  useEffect(() => {
+    const fetchCalendarEvents = async () => {
+      try {
+        const events = await apiFetch("/calendar")
+        setEvents(events);
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message)
+        } else {
+          setError("An unexpected eror has occurred")
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCalendarEvents();
   }, [])
 
   const handleCreateTask = async (title: string) => {
@@ -114,6 +135,8 @@ const TasksPage = () => {
     return true;
   });
 
+  console.log(events)
+
   return (
     <>
       <LogoutButton />
@@ -143,6 +166,17 @@ const TasksPage = () => {
           </li>
         ))}
       </ul>
+
+      {events.map((event) => (
+        <CalendarEventCard
+          key={event.id}
+          eventId={event.id}
+          title={event.title}
+          startTime={event.start_time}
+          endTime={event.end_time}
+          type={event.type}
+        />
+      ))}
     </>
   )
 }
