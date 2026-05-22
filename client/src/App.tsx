@@ -6,6 +6,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import TasksPage from "./pages/tasks/TasksPage";
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import CalendarPage from './pages/calendar/CalendarPage';
 
 function App() {
   return (
@@ -28,6 +29,15 @@ function App() {
           element={
             <ProtectedRoute>
               <TasksPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <CalendarPage />
             </ProtectedRoute>
           }
         />

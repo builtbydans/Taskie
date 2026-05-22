@@ -1,4 +1,4 @@
-export type CalendarEvent = {
+export type BackendCalendarEvent = {
   id: string;
   user_id: string;
   title: string;

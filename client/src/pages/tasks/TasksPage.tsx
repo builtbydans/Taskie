@@ -21,42 +21,33 @@ const TasksPage = () => {
   const [filter, setFilter] = useState<Filter>("ALL");
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
-        const tasks = await apiFetch("/tasks")
-        setTasks(tasks);
+        setLoading(true);
+
+        const [tasksData, eventsData] = await Promise.all([
+          apiFetch("/tasks"),
+          apiFetch("/calendar")
+        ]);
+
+        setTasks(tasksData);
+        setEvents(eventsData);
+
       } catch (err) {
+
         if (err instanceof Error) {
-          setError(err.message)
+          setError(err.message);
         } else {
-          setError("An unexpected error has occured")
+          setError("An unexpected error has occurred");
         }
+
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchTasks();
-  }, [])
-
-  useEffect(() => {
-    const fetchCalendarEvents = async () => {
-      try {
-        const events = await apiFetch("/calendar")
-        setEvents(events);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message)
-        } else {
-          setError("An unexpected eror has occurred")
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCalendarEvents();
-  }, [])
+    fetchData();
+  }, []);
 
   const handleCreateTask = async (title: string) => {
     const newTask = await apiFetch("/tasks", {

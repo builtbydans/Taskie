@@ -1,0 +1,26 @@
+diff --git a/node_modules/calendarkit-pro/dist/index.js b/node_modules/calendarkit-pro/dist/index.js
+index cb31b55..f696f19 100644
+--- a/node_modules/calendarkit-pro/dist/index.js
++++ b/node_modules/calendarkit-pro/dist/index.js
+@@ -2137,7 +2137,7 @@ var useCalendarLogic = ({
+ }) => {
+   const [internalView, setInternalView] = React15.useState("week");
+   const [internalDate, setInternalDate] = React15.useState(/* @__PURE__ */ new Date());
+-  const [isSidebarOpen, setIsSidebarOpen] = React15.useState(true);
++  const [isSidebarOpen, setIsSidebarOpen] = React15.useState(false);
+   const [isModalOpen, setIsModalOpen] = React15.useState(false);
+   const [selectedEvent, setSelectedEvent] = React15.useState(null);
+   const [modalInitialDate, setModalInitialDate] = React15.useState(void 0);
+diff --git a/node_modules/calendarkit-pro/dist/index.mjs b/node_modules/calendarkit-pro/dist/index.mjs
+index 4c6c220..87fb1ec 100644
+--- a/node_modules/calendarkit-pro/dist/index.mjs
++++ b/node_modules/calendarkit-pro/dist/index.mjs
+@@ -2116,7 +2116,7 @@ var useCalendarLogic = ({
+ }) => {
+   const [internalView, setInternalView] = useState("week");
+   const [internalDate, setInternalDate] = useState(/* @__PURE__ */ new Date());
+-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
++  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [selectedEvent, setSelectedEvent] = useState(null);
+   const [modalInitialDate, setModalInitialDate] = useState(void 0);
