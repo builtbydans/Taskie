@@ -1,5 +1,53 @@
+diff --git a/node_modules/calendarkit-pro/dist/index.d.mts b/node_modules/calendarkit-pro/dist/index.d.mts
+index b65c543..0e454f2 100644
+--- a/node_modules/calendarkit-pro/dist/index.d.mts
++++ b/node_modules/calendarkit-pro/dist/index.d.mts
+@@ -2,7 +2,14 @@ import React$1 from 'react';
+ import { Locale } from 'date-fns';
+ import { ClassValue } from 'clsx';
+
+-type ViewType = 'month' | 'week' | 'day' | 'agenda' | 'resource';
++type ViewType =
++  | 'month'
++  | 'week'
++  | 'threeDay'
++  | 'day'
++  | 'agenda'
++  | 'resource';
++
+ interface EventAttachment {
+     id: string;
+     name: string;
+@@ -70,6 +77,7 @@ interface CalendarTranslations {
+     today: string;
+     month: string;
+     week: string;
++    threeDay: string;
+     day: string;
+     agenda: string;
+     resource: string;
+diff --git a/node_modules/calendarkit-pro/dist/index.d.ts b/node_modules/calendarkit-pro/dist/index.d.ts
+index b65c543..e4214ac 100644
+--- a/node_modules/calendarkit-pro/dist/index.d.ts
++++ b/node_modules/calendarkit-pro/dist/index.d.ts
+@@ -2,7 +2,14 @@ import React$1 from 'react';
+ import { Locale } from 'date-fns';
+ import { ClassValue } from 'clsx';
+
+-type ViewType = 'month' | 'week' | 'day' | 'agenda' | 'resource';
++type ViewType =
++  | 'month'
++  | 'week'
++  | 'threeDay'
++  | 'day'
++  | 'agenda'
++  | 'resource';
++
+ interface EventAttachment {
+     id: string;
+     name: string;
 diff --git a/node_modules/calendarkit-pro/dist/index.js b/node_modules/calendarkit-pro/dist/index.js
-index cb31b55..f696f19 100644
+index cb31b55..421728b 100644
 --- a/node_modules/calendarkit-pro/dist/index.js
 +++ b/node_modules/calendarkit-pro/dist/index.js
 @@ -2137,7 +2137,7 @@ var useCalendarLogic = ({
@@ -12,10 +60,277 @@ index cb31b55..f696f19 100644
    const [selectedEvent, setSelectedEvent] = React15.useState(null);
    const [modalInitialDate, setModalInitialDate] = React15.useState(void 0);
 diff --git a/node_modules/calendarkit-pro/dist/index.mjs b/node_modules/calendarkit-pro/dist/index.mjs
-index 4c6c220..87fb1ec 100644
+index 4c6c220..bb331cb 100644
 --- a/node_modules/calendarkit-pro/dist/index.mjs
 +++ b/node_modules/calendarkit-pro/dist/index.mjs
-@@ -2116,7 +2116,7 @@ var useCalendarLogic = ({
+@@ -7,7 +7,7 @@ import { format, differenceInMinutes, subDays, addDays, differenceInMilliseconds
+ import { cva } from 'class-variance-authority';
+ import { clsx } from 'clsx';
+ import { twMerge } from 'tailwind-merge';
+-import { Menu, ChevronLeft, ChevronRight, Sun, Moon, CalendarDays, CalendarRange, Calendar, ListTodo, Plus, ChevronDown, Globe, Clock, Users, Paperclip, Bell, Edit3, Copy, Trash2, X, Edit2, MapPin, ExternalLink, AlignLeft, File, Download, BellRing, Check, Repeat, Tag } from 'lucide-react';
++import { Menu, ChevronLeft, ChevronRight, Sun, Moon, CalendarDays, Calendar1, CalendarRange, Calendar, ListTodo, Plus, ChevronDown, Globe, Clock, Users, Paperclip, Bell, Edit3, Copy, Trash2, X, Edit2, MapPin, ExternalLink, AlignLeft, File, Download, BellRing, Check, Repeat, Tag } from 'lucide-react';
+ import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+ import { CSS } from '@dnd-kit/utilities';
+ import { RRule } from 'rrule';
+@@ -73,9 +73,10 @@ var CalendarHeader = ({
+   locale
+ }) => {
+   const viewConfig = [
+-    { key: "month", icon: CalendarDays },
+-    { key: "week", icon: CalendarRange },
+-    { key: "day", icon: Calendar },
++    // { key: "month", icon: CalendarDays },
++    // { key: "week", icon: CalendarRange },
++    { key: "day", icon: Calendar1 },
++    { key: "threeDay", icon: CalendarRange },
+     { key: "agenda", icon: ListTodo }
+   ];
+   return /* @__PURE__ */ React15__default.createElement("div", { className: "flex flex-col md:flex-row items-center justify-between px-3 md:px-5 py-3 border-b-[0px] border-border/50 bg-gradient-to-r from-background via-background to-muted/20 gap-3 md:gap-0 min-h-[64px]" }, /* @__PURE__ */ React15__default.createElement("div", { className: "flex items-center gap-2 w-full md:w-auto justify-between md:justify-start" }, /* @__PURE__ */ React15__default.createElement("div", { className: "flex items-center gap-2 md:gap-3" }, /* @__PURE__ */ React15__default.createElement(
+@@ -843,6 +844,243 @@ var WeekView = ({
+     )
+   ));
+ };
++
++// 3 day patch
++var ThreeDayView = ({
++  currentDate,
++  events,
++  onEventClick,
++  onTimeSlotClick,
++  onEventResize,
++  timezone,
++  locale,
++  readonly
++}) => {
++  const start = addDays(currentDate, 1);
++  const weekDays = eachDayOfInterval({
++    start,
++    end: addDays(start, 2),
++  });
++  const hours = Array.from({ length: 24 }, (_, i) => i);
++  const hourHeight = 60;
++  const scrollContainerRef = React15__default.useRef(null);
++  const [now, setNow] = React15__default.useState(/* @__PURE__ */ new Date());
++  React15__default.useEffect(() => {
++    const interval = setInterval(() => setNow(/* @__PURE__ */ new Date()), 6e4);
++    return () => clearInterval(interval);
++  }, []);
++  React15__default.useEffect(() => {
++    if (scrollContainerRef.current) {
++      const scrollToActualTime = () => {
++        const currentHour = now.getHours();
++        const offsetHour = 4;
++        return (currentHour - offsetHour) * hourHeight;
++      };
++      scrollContainerRef.current.scrollTop = scrollToActualTime();
++    }
++  }, []);
++  const getZonedDate = (date) => {
++    return timezone ? toZonedTime(date, timezone) : date;
++  };
++  const zonedNow = getZonedDate(/* @__PURE__ */ new Date());
++  const getTimezoneDisplay = (tz) => {
++    const date = now;
++    let displayTime = "";
++    let acronym = "";
++    if (!tz) {
++      displayTime = format(date, "HH:mm");
++      try {
++        acronym = new Intl.DateTimeFormat("en-US", { timeZoneName: "short" }).formatToParts(date).find((part) => part.type === "timeZoneName")?.value || "";
++      } catch (e) {
++        acronym = "LOC";
++      }
++    } else {
++      try {
++        const zDate = toZonedTime(date, tz);
++        displayTime = format(zDate, "HH:mm");
++        acronym = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(date).find((part) => part.type === "timeZoneName")?.value || "";
++      } catch (e) {
++        displayTime = format(date, "HH:mm");
++        acronym = tz;
++      }
++    }
++    return /* @__PURE__ */ React15__default.createElement("div", { className: "flex flex-col items-center justify-center leading-tight" }, /* @__PURE__ */ React15__default.createElement("span", null, displayTime), /* @__PURE__ */ React15__default.createElement("span", { className: "text-[10px] opacity-75" }, "(", acronym, ")"));
++  };
++  const timeFormat = locale?.code === "fr" ? "H:mm" : "h a";
++  const eventTimeFormat = locale?.code === "fr" ? "H:mm" : "h:mm a";
++  const nowFormat = locale?.code === "fr" ? "H:mm" : "h:mm";
++  return /* @__PURE__ */ React15__default.createElement("div", { className: "flex flex-col h-full bg-background border-[0.5px] border-border/50 rounded-2xl overflow-hidden min-w-[800px] md:min-w-0 shadow-sm" }, /* @__PURE__ */ React15__default.createElement(
++    "div",
++    {
++      ref: scrollContainerRef,
++      className: "flex-1 overflow-y-auto scrollbar-hide relative bg-background scroll-smooth",
++      style: { scrollbarGutter: "stable" }
++    },
++    /* @__PURE__ */ React15__default.createElement("div", { className: "flex border-b-[0.5px] border-border/50 bg-gradient-to-r from-muted/20 via-background to-muted/20 z-20 sticky top-0 backdrop-blur-sm" }, /* @__PURE__ */ React15__default.createElement("div", { className: "flex-none p-3 text-center text-xs font-semibold text-muted-foreground w-16 flex items-center justify-center border-r-[0.5px] border-border/30 bg-muted/10" }, getTimezoneDisplay(timezone)), /* @__PURE__ */ React15__default.createElement("div", { className: "flex-1 grid grid-cols-3" }, weekDays.map((day, index) => /* @__PURE__ */ React15__default.createElement("div", { key: day.toISOString(), className: cn("py-3 px-2 text-center", index > 0 && "border-l-[0.5px] border-border/30") }, /* @__PURE__ */ React15__default.createElement("div", { className: "text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5" }, format(day, "EEE", { locale })), /* @__PURE__ */ React15__default.createElement("div", { className: cn(
++      "w-9 h-9 flex items-center justify-center rounded-xl mx-auto text-sm font-semibold transition-all duration-200",
++      isToday(day) ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30 scale-110" : "text-foreground hover:bg-accent/80"
++    ) }, format(day, "d", { locale })))))),
++    /* @__PURE__ */ React15__default.createElement(
++      "div",
++      {
++        className: "flex min-w-full relative",
++        style: { height: hours.length * hourHeight }
++      },
++      /* @__PURE__ */ React15__default.createElement("div", { className: "flex-none w-16 border-r-[0.5px] border-border/30 relative bg-muted/5" }, hours.map((hour) => /* @__PURE__ */ React15__default.createElement(
++        "div",
++        {
++          key: hour,
++          className: "relative w-full text-[11px] text-muted-foreground/80 text-right pr-3 font-medium tabular-nums box-border",
++          style: { height: hourHeight }
++        },
++        /* @__PURE__ */ React15__default.createElement("span", { className: "block -translate-y-1/2" }, hour !== 0 && format((/* @__PURE__ */ new Date()).setHours(hour, 0, 0, 0), timeFormat, { locale }))
++      ))),
++      /* @__PURE__ */ React15__default.createElement("div", { className: "flex-1 grid grid-cols-3 relative" }, weekDays.map((day, dayIndex) => {
++        const dayEvents = events.filter((e) => {
++          const zonedStart = getZonedDate(e.start);
++          return isSameDay(zonedStart, day);
++        });
++        return /* @__PURE__ */ React15__default.createElement("div", { key: day.toISOString(), className: cn("relative h-full", dayIndex > 0 && "border-l-[0.5px] border-border/30") }, hours.map((hour) => {
++          return /* @__PURE__ */ React15__default.createElement(
++            "div",
++            {
++              key: hour,
++              className: "w-full border-b-[0.5px] border-dashed border-border/20 box-border relative hover:bg-accent/5 transition-colors",
++              style: { height: hourHeight }
++            },
++            [0, 15, 30, 45].map((minute) => {
++              const cellDate = new Date(day);
++              cellDate.setHours(hour, minute, 0, 0);
++              const cellId = cellDate.toISOString();
++              return /* @__PURE__ */ React15__default.createElement(
++                DroppableCell,
++                {
++                  key: minute,
++                  id: cellId,
++                  date: cellDate,
++                  className: "w-full absolute left-0 right-0 z-0 transition-colors",
++                  style: {
++                    height: "25%",
++                    top: `${minute / 60 * 100}%`
++                  }
++                },
++                /* @__PURE__ */ React15__default.createElement(
++                  "div",
++                  {
++                    className: "w-full h-full bg-transparent cursor-pointer",
++                    onClick: () => onTimeSlotClick?.(cellDate)
++                  }
++                )
++              );
++            })
++          );
++        }), dayEvents.map((event) => {
++          const overlappingEvents = dayEvents.filter((e) => {
++            if (e.id === event.id) return false;
++            const s1 = getZonedDate(event.start).getTime();
++            const e1 = getZonedDate(event.end).getTime();
++            const s2 = getZonedDate(e.start).getTime();
++            const e2 = getZonedDate(e.end).getTime();
++            return s1 < e2 && e1 > s2;
++          });
++          const group = [event, ...overlappingEvents].sort(
++            (a, b) => getZonedDate(a.start).getTime() - getZonedDate(b.start).getTime() || (a.id > b.id ? 1 : -1)
++            // stable sort
++          );
++          const index = group.findIndex((e) => e.id === event.id);
++          const count = group.length;
++          const widthPercent = 100 / count;
++          const leftPercent = index * widthPercent;
++          const zonedEventStart = getZonedDate(event.start);
++          const zonedEventEnd = getZonedDate(event.end);
++          const startMinutes = zonedEventStart.getHours() * 60 + zonedEventStart.getMinutes();
++          const durationMinutes = differenceInMinutes(zonedEventEnd, zonedEventStart);
++          const top = startMinutes / 60 * hourHeight;
++          const height = durationMinutes / 60 * hourHeight;
++          const isShortEvent = durationMinutes < 60;
++          return /* @__PURE__ */ React15__default.createElement(
++            DraggableEvent,
++            {
++              key: `${event.id}-${day.toISOString()}`,
++              event,
++              className: `absolute z-10 transition-all ${readonly ? "cursor-default" : ""}`,
++              style: {
++                top: `${top}px`,
++                height: `${Math.max(height, 20)}px`,
++                left: `${leftPercent}%`,
++                width: `${widthPercent}%`,
++                // Add minimal spacing between overlapping events
++                paddingRight: count > 1 ? "2px" : "0"
++              }
++            },
++            /* @__PURE__ */ React15__default.createElement(
++              ResizableEvent,
++              {
++                readonly,
++                event,
++                hourHeight,
++                onResize: onEventResize,
++                className: "h-full",
++                style: { height: "100%" }
++              },
++              /* @__PURE__ */ React15__default.createElement(
++                "div",
++                {
++                  className: cn(
++                    "rounded-md border shadow-sm transition-all hover:shadow-md group overflow-hidden relative",
++                    "glass",
++                    readonly ? "cursor-default" : "cursor-grab active:cursor-grabbing",
++                    !event.color && "border-primary/20 bg-primary/10",
++                    isShortEvent ? "px-1 flex items-center justify-center" : "p-2",
++                    // Add active border for overlapped events to distinguish them
++                    count > 1 && "border-l-4 border-l-primary/50"
++                  ),
++                  style: {
++                    height: "100%",
++                    backgroundColor: event.color ? `${event.color}15` : void 0,
++                    borderColor: event.color ? `${event.color}40` : void 0,
++                    borderLeftWidth: "3px",
++                    borderLeftColor: event.color || "var(--primary)"
++                  },
++                  onClick: (e) => {
++                    e.stopPropagation();
++                    onEventClick?.(event);
++                  },
++                  title: count > 1 ? `${event.title} (${index + 1}/${count})` : void 0
++                },
++                /* @__PURE__ */ React15__default.createElement("div", { className: "flex flex-col h-full overflow-hidden w-full" }, /* @__PURE__ */ React15__default.createElement("div", { className: cn(
++                  "font-semibold truncate text-foreground/90 leading-tight",
++                  isShortEvent ? "text-xs text-center" : "text-xs"
++                ) }, event.title), !isShortEvent && /* @__PURE__ */ React15__default.createElement(React15__default.Fragment, null, /* @__PURE__ */ React15__default.createElement("div", { className: "text-[10px] text-muted-foreground truncate mt-0.5 font-medium leading-tight" }, format(zonedEventStart, eventTimeFormat, { locale }), " - ", format(zonedEventEnd, eventTimeFormat, { locale })), event.description && height > 50 && /* @__PURE__ */ React15__default.createElement("div", { className: "text-[10px] text-muted-foreground/80 truncate mt-1 leading-tight opacity-80" }, event.description)), count > 1 && !isShortEvent && /* @__PURE__ */ React15__default.createElement("div", { className: "absolute top-1 right-1 bg-background/80 backdrop-blur-sm rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold text-muted-foreground border border-border shadow-sm" }, count))
++              )
++            )
++          );
++        }), isToday(day) && /* @__PURE__ */ React15__default.createElement(
++          "div",
++          {
++            className: "absolute left-0 right-0 z-20 pointer-events-none flex items-center",
++            style: {
++              top: `${(zonedNow.getHours() * 60 + zonedNow.getMinutes()) / 60 * hourHeight}px`
++            }
++          },
++          /* @__PURE__ */ React15__default.createElement("div", { className: "h-[2px] w-full bg-gradient-to-r from-primary via-primary to-primary/50" }),
++          /* @__PURE__ */ React15__default.createElement("div", { className: "absolute -left-1.5 w-3 h-3 bg-primary rounded-full shadow-lg shadow-primary/40 ring-2 ring-background animate-pulse" })
++        ));
++      }))
++    ),
++    /* @__PURE__ */ React15__default.createElement(
++      "div",
++      {
++        className: "absolute left-0 w-16 pointer-events-none z-30 flex justify-end pr-2",
++        style: {
++          top: `${(zonedNow.getHours() * 60 + zonedNow.getMinutes()) / 60 * hourHeight + 80}px`
++        }
++      },
++      /* @__PURE__ */ React15__default.createElement("span", { className: "text-[10px] font-bold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md shadow-md -translate-y-1/2 backdrop-blur-none" }, format(zonedNow, nowFormat, { locale }))
++    )
++  ));
++};
++
+ var DayView = ({
+   currentDate,
+   events,
+@@ -2116,7 +2354,7 @@ var useCalendarLogic = ({
  }) => {
    const [internalView, setInternalView] = useState("week");
    const [internalDate, setInternalDate] = useState(/* @__PURE__ */ new Date());
@@ -24,3 +339,33 @@ index 4c6c220..87fb1ec 100644
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [selectedEvent, setSelectedEvent] = useState(null);
    const [modalInitialDate, setModalInitialDate] = useState(void 0);
+@@ -2513,7 +2751,8 @@ var Scheduler = ({
+     today: "Today",
+     month: "Month",
+     week: "Week",
+-    day: "Day",
++    threeDay: "3-Day",
++    day: "Today",
+     agenda: "Agenda",
+     resource: "Resource",
+     createEvent: "Create Event",
+@@ -2689,6 +2928,19 @@ var Scheduler = ({
+             readonly: readOnly
+           }
+         ),
++        view === "threeDay" && /* @__PURE__ */ React15__default.createElement(
++          ThreeDayView,
++          {
++            currentDate,
++            events: filteredEvents,
++            onEventClick: handleEventClickInternal,
++            onTimeSlotClick: handleTimeSlotClick,
++            onEventResize: handleEventResize,
++            timezone,
++            locale,
++            readonly: readOnly
++          }
++        ),
+         view === "day" && /* @__PURE__ */ React15__default.createElement(
+           DayView,
+           {

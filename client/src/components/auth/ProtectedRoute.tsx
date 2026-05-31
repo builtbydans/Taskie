@@ -4,20 +4,19 @@ type Props = {
   children: React.ReactNode;
 };
 
-const ProtectedRoute = ({
-  children
-}: Props) => {
-
+const ProtectedRoute = ({ children }: Props) => {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    return (<Navigate
-      to="/auth/login"
-      state={{
-        message: "You need to login to view your tasks"
-      }}
-    />
-  )};
+    return (
+      <Navigate
+        to="/auth/login"
+        state={{
+          message: "You need to login to view your tasks",
+        }}
+      />
+    );
+  }
 
   return children;
 };

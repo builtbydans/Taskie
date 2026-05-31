@@ -12,29 +12,23 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     setError(null);
     setLoading(true);
 
     try {
-
-      const response = await fetch(
-        "http://localhost:3000/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const response = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
       const data = await response.json();
 
@@ -45,15 +39,12 @@ const LoginPage = () => {
       localStorage.setItem("token", data.token);
 
       navigate("/tasks");
-
     } catch (err) {
-
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("Something went wrong");
       }
-
     } finally {
       setLoading(false);
     }
@@ -64,21 +55,16 @@ const LoginPage = () => {
 
   return (
     <div>
-      {message && (
-        <Card>{message}</Card>
-      )}
+      {message && <Card>{message}</Card>}
       <h1>Login</h1>
 
       <form onSubmit={handleLogin}>
-
         <div>
           <input
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
@@ -87,21 +73,14 @@ const LoginPage = () => {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
-        <Button type="submit">
-            {loading ? "Logging in..." : "Login"}
-        </Button>
-
+        <Button type="submit">{loading ? "Logging in..." : "Login"}</Button>
       </form>
 
-      {error && (
-        <p>{error}</p>
-      )}
+      {error && <p>{error}</p>}
     </div>
   );
 };

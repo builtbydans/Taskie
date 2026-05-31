@@ -1,34 +1,24 @@
-import React from 'react'
+import React from "react";
 
 type AddTaskProps = {
   title: string;
 
-  handleSubmit: (
-    e: React.FormEvent<HTMLFormElement>
-  ) => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 
-  handleChange: (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => void;
-}
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+};
 
-const AddTaskForm = ({ handleSubmit, handleChange, title}: AddTaskProps) => {
+const AddTaskForm = ({ handleSubmit, handleChange, title }: AddTaskProps) => {
   return (
     <form onSubmit={handleSubmit}>
       <label>
         Add task title:
-        <input
-          type="text"
-          value={title}
-          onChange={handleChange}
-        />
+        <input type="text" value={title} onChange={handleChange} />
       </label>
 
-      <button type="submit">
-        Add Task
-      </button>
+      <button type="submit">Add Task</button>
     </form>
-  )
-}
+  );
+};
 
 export default AddTaskForm;
